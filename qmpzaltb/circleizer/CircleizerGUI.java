@@ -11,11 +11,13 @@ import javax.swing.JOptionPane;
 
 public class CircleizerGUI {
 
+	//Use arrays in Circleizer class instead
+	@Deprecated
 	public static final Color[] JAVA_COLORS = {Color.BLACK, Color.BLUE, Color.CYAN, Color.DARK_GRAY, Color.GRAY, Color.GREEN, Color.LIGHT_GRAY, Color.MAGENTA, Color.ORANGE, Color.PINK, Color.RED, Color.WHITE, Color.YELLOW};
+	@Deprecated
 	public static final Color[] JAVA_GRAYSCALE = {Color.BLACK, Color.LIGHT_GRAY, Color.GRAY, Color.DARK_GRAY, Color.WHITE};
+	@Deprecated
 	public static final Color[] JAVA_COLORED_COLORS = { Color.BLUE, Color.CYAN, Color.GREEN, Color.MAGENTA, Color.ORANGE, Color.PINK, Color.RED, Color.YELLOW };
-	
-	
 	
 	public static void start() {
 		javax.swing.JFrame.setDefaultLookAndFeelDecorated(false);
@@ -34,6 +36,8 @@ public class CircleizerGUI {
 		ArrayList<String> successes = new ArrayList<String>();
 		ArrayList<String> errors = new ArrayList<String>();
 		
+		Circleizer c = new Circleizer();
+		
 		for (File f : imageFiles) {
 			BufferedImage image;
 			try {
@@ -43,8 +47,7 @@ public class CircleizerGUI {
 				continue;
 			}
 			
-			BitmapImage bitmap = new BitmapImage(image);
-			BitmapImage bubbled = bitmap.bubbleized(4, 2, JAVA_COLORS);
+			BufferedImage circleized = c.circleize(image);
 			String filename = f.getAbsolutePath().substring(0, f.getAbsolutePath().lastIndexOf('.')) + "_circleized";
 			int attempt = 1;
 			File writeTo = new File(filename + ".png");
@@ -54,7 +57,7 @@ public class CircleizerGUI {
 			}
 			
 			try {
-				ImageIO.write(bubbled.toBufferedImage(), "png", writeTo);
+				ImageIO.write(circleized, "png", writeTo);
 			} catch (IOException e) {
 				errors.add("Failed to write bubbled image from " + f.getAbsolutePath() + " to " + writeTo.getAbsolutePath());
 				continue;

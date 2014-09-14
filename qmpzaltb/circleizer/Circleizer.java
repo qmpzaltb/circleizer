@@ -6,102 +6,81 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.util.LinkedList;
 
-/**
- * 
- * 
- * @author qmpzaltb
- *
- */
-@Deprecated //HEED THE DEPRECATION
-public class BitmapImage {
+public class Circleizer {
 
-	public final int width;
-	public final int height;
-	public final int pixelCount;
-
-	protected BitmapPixel[] pixels;
-
-	public BitmapImage(BufferedImage image) {
-		System.out.println("Creating image from buffered image...");
-		width = image.getWidth();
-		height = image.getHeight();
-		pixelCount = width * height;
-		pixels = new BitmapPixel[pixelCount];
+	public static final Color[] JAVA_COLORS = {Color.BLACK, Color.BLUE, Color.CYAN, Color.DARK_GRAY, Color.GRAY, Color.GREEN, Color.LIGHT_GRAY, Color.MAGENTA, Color.ORANGE, Color.PINK, Color.RED, Color.WHITE, Color.YELLOW};
+	public static final Color[] JAVA_GRAYSCALE = {Color.BLACK, Color.LIGHT_GRAY, Color.GRAY, Color.DARK_GRAY, Color.WHITE};
+	public static final Color[] JAVA_COLORED_COLORS = { Color.BLUE, Color.CYAN, Color.GREEN, Color.MAGENTA, Color.ORANGE, Color.PINK, Color.RED, Color.YELLOW };
+	
+	public static final int DEFAULT_BUBBLE_MIN_DIAMETER = 4;
+	public static final int DEFAULT_BUBBLE_SIZE_EXPONENTIATION = 2;
+	
+	/**
+	 * The allowed Circle colors in RGB form
+	 */
+	int[] colors;
+	
+	/**
+	 * The background color in RGB form.
+	 */
+	int backgroundColor;
+	
+	int bubbleMinDiameter;
+	int bubbleSizeExponentiation;
+	
+	
+	public Circleizer() {
+		setCircleColors(JAVA_COLORS);
+		bubbleMinDiameter = DEFAULT_BUBBLE_MIN_DIAMETER;
+		bubbleSizeExponentiation = DEFAULT_BUBBLE_SIZE_EXPONENTIATION;
 		
-		int[] imagePixels = image.getRGB(0, 0, width, height, new int[pixelCount], 0, width);
-		
-		for (int i = 0; i < pixelCount; i ++) {
-//			if ( i % 10000 == 0) {
-//				System.out.printf("%.3f%% complete\n", (i * 100.0 / pixelCount));
-//			}
-			pixels[i] = new BitmapPixel(imagePixels[i]);
-		}
-		
-		System.out.println("Finished creating image from buffered image!");
 	}
 	
-	public BitmapImage(BitmapImage other) {
-		width = other.width;
-		height = other.height;
-		pixelCount = other.pixelCount;
-		pixels = new BitmapPixel[pixelCount];
-		for (int i = 0; i < pixelCount; i ++) {
-			pixels[i] = other.pixels[i];
+	public void setCircleColors(Color... colors){
+		this.colors = new int[colors.length];
+		for (int i = 0; i < colors.length; i ++) {
+			this.colors[i] = colors[i].getRGB();
 		}
 	}
 	
-	protected BitmapImage(int width, int height) {
-		this.width = width;
-		this.height = height;
-		pixelCount = width * height;
-		pixels = new BitmapPixel[pixelCount];
-	}
-	
-	public BitmapPixel getPixelAt(int x, int y) {
-		return pixels[x + width * y];
-	}
-	
-	public void setPixelAt(int x, int y, BitmapPixel pixel) {
-		pixels[x + width * y] = pixel;
-	}
-	
-	public BitmapImage bubbleized (int bubbleMinDiameter, int bubbleSizeExponentiation, Color[] bubbleColors) {
+	public BufferedImage circleize(BufferedImage image) {
+		
+		int width = image.getWidth();
+		int height = image.getHeight();
+		
+		int[] pixels = image.getRGB(0, 0, width, height, new int[width * height], 0, width);
 		
 		final class Bubble {
 			
 			public final int x;
 			public final int y;
 			public final int size;
-			public final int colorIndex;
+			public final int rgb;
 			
-			public Bubble(int x, int y, int size, int colorIndex){
+			public Bubble(int x, int y, int size, int rgb){
 				this.x = x;
 				this.y = y;
 				this.size = size;
-				this.colorIndex = colorIndex;
+				this.rgb = rgb;
 			}
 			
 		}
 		
 		LinkedList<Bubble> bubbles = new LinkedList<Bubble>();
 		
-		BitmapPixel[] bitmapColors = new BitmapPixel[bubbleColors.length];
-		for (int i = 0; i < bitmapColors.length; i ++) {
-			bitmapColors[i] = BitmapPixel.getPixelFromColor(bubbleColors[i]);
-		}
-		
 		//Calculating the dimensions of the grid on which circles are created.
+		//Its essentially a downscaled version of the original image.
 		int sampleArrayWidth = width / bubbleMinDiameter;
 		int sampleArrayHeight = height / bubbleMinDiameter;
 		int sampleCount = sampleArrayWidth * sampleArrayHeight;
-		int[] sampleColorIndices = new int[sampleCount];
+		int[] sampleColors = new int[sampleCount];
 		boolean[] coveredSamples = new boolean[sampleCount];
 		
 		//Calculating the closest color to every point on that grid
 		for (int x = 0; x < sampleArrayWidth; x ++) {
 			for (int y = 0; y < sampleArrayHeight; y ++) {
-				BitmapPixel pixel = pixels[x * bubbleMinDiameter + y * bubbleMinDiameter * width];
-				sampleColorIndices[x + y * sampleArrayWidth] = pixel.closestColorIndexTo(bitmapColors);
+				int pixel = pixels[x * bubbleMinDiameter + y * bubbleMinDiameter * width];
+				sampleColors[x + y * sampleArrayWidth] = closestCircleColor(pixel);
 				
 			}
 		}
@@ -145,7 +124,7 @@ public class BitmapImage {
 						continue;
 					}
 					
-					int thisColorIndex = sampleColorIndices[x + y * sampleArrayWidth];
+					int thisColor = sampleColors[x + y * sampleArrayWidth];
 					
 					boolean canBubblify = true;
 					
@@ -163,7 +142,7 @@ public class BitmapImage {
 							float dist3 = dx1 * dx1 + dy0 * dy0;
 							
 							if (dist0 < radiusSquared || dist1 < radiusSquared || dist2 < radiusSquared || dist3 < radiusSquared) {
-								if (coveredSamples[xx + yy * sampleArrayWidth] || sampleColorIndices[xx + yy * sampleArrayWidth] != thisColorIndex) {
+								if (coveredSamples[xx + yy * sampleArrayWidth] || sampleColors[xx + yy * sampleArrayWidth] != thisColor) {
 									canBubblify = false;
 									break zoneCircleSearch;
 								}
@@ -201,7 +180,7 @@ public class BitmapImage {
 							}
 						}
 						
-						bubbles.add(new Bubble(x,y,size,thisColorIndex));
+						bubbles.add(new Bubble(x,y,size,thisColor));
 						
 					}
 					
@@ -211,42 +190,55 @@ public class BitmapImage {
 			}
 		}
 		
-		BufferedImage writeTo = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-		Graphics2D g = (Graphics2D) writeTo.getGraphics();
+		BufferedImage circleizedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+		Graphics2D g = (Graphics2D) circleizedImage.getGraphics();
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		g.setColor(new Color(240,240,240));
 		g.fillRect(0, 0, width, height);
 		for (Bubble b : bubbles) {
-			g.setColor(bubbleColors[b.colorIndex]);
+			g.setColor(new Color(b.rgb));
 			g.fillOval(b.x * bubbleMinDiameter, b.y * bubbleMinDiameter, b.size * bubbleMinDiameter, b.size * bubbleMinDiameter);
 		}
 		g.dispose();
 		
-		BitmapImage returnImage = new BitmapImage(writeTo);
+		return circleizedImage;
 		
-		return returnImage;
+		
 	}
 	
-	public BufferedImage toBufferedImage() {
+	/**
+	 * Returns a relative distance between two rgb int values.
+	 * @param rgb1 the first rgb int value
+	 * @param rgb2 the second rgb int value
+	 * @return the Euclidean distance between the colors' dimensions squared
+	 */
+	private int fastDistance(int rgb1, int rgb2) {
+		int r1 = (rgb1 >> 16) & 0xFF;
+		int g1 = (rgb1 >> 8) & 0xFF;
+		int b1 = (rgb1) & 0xFF;
 		
-		System.out.println("Starting conversion to buffered image...");
+		int r2 = (rgb2 >> 16) & 0xFF;
+		int g2 = (rgb2 >> 8) & 0xFF;
+		int b2 = (rgb2) & 0xFF;
 		
-		BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-		int[] rgbArray = new int[pixelCount];
+		int dr = r2 - r1;
+		int dg = g2 - g1;
+		int db = b2 - b1;
 		
-		for (int x = 0; x < width; x ++) {
-			for (int y = 0; y < height; y ++) {
-				
-				BitmapPixel pixel = getPixelAt(x,y);
-				rgbArray[x + y * width] = pixel.toRGB();
-				
+		return (dr * dr + dg * dg + db * db);
+	}
+	
+	private int closestCircleColor(int rgb) {
+		int closestColor = -1;
+		int closestDistance = Integer.MAX_VALUE;
+		for (int i = 0; i < colors.length; i ++) {
+			int distance = fastDistance(colors[i], rgb);
+			if (distance < closestDistance) {
+				closestDistance = distance;
+				closestColor = colors[i];
 			}
 		}
-		
-		image.setRGB(0, 0, width, height, rgbArray, 0, width);
-		
-		System.out.println("Completed conversion to buffered image!");
-		return image;
+		return closestColor;
 	}
-
+	
 }

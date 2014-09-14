@@ -9,6 +9,7 @@ import java.awt.Color;
  * @author qmpzaltb
  *
  */
+@Deprecated //HEED THE DEPRECATION
 public class BitmapPixel {
 
 	public final float r;
