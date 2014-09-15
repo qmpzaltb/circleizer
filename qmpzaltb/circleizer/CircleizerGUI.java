@@ -37,6 +37,12 @@ public class CircleizerGUI {
 		ArrayList<String> errors = new ArrayList<String>();
 		
 		Circleizer c = new Circleizer();
+		//New stuff! Color finder finds appropriate colors to circleize with!
+		ColorFinder cf = new ColorFinder();
+		//higher resolutions take considerably more time, but return more accurate colors
+		cf.setResolution(128);
+		//self explanatory
+		cf.setColorAmount(16);
 		
 		for (File f : imageFiles) {
 			BufferedImage image;
@@ -47,6 +53,8 @@ public class CircleizerGUI {
 				continue;
 			}
 			
+			int[] colors = cf.findColors(image);
+			c.setCircleColors(colors);
 			BufferedImage circleized = c.circleize(image);
 			String filename = f.getAbsolutePath().substring(0, f.getAbsolutePath().lastIndexOf('.')) + "_circleized";
 			int attempt = 1;

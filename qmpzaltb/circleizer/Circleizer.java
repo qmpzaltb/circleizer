@@ -36,10 +36,17 @@ public class Circleizer {
 		
 	}
 	
-	public void setCircleColors(Color... colors){
+	public void setCircleColors(Color... colors) {
 		this.colors = new int[colors.length];
 		for (int i = 0; i < colors.length; i ++) {
 			this.colors[i] = colors[i].getRGB();
+		}
+	}
+	
+	public void setCircleColors(int... colors) {
+		this.colors = new int[colors.length];
+		for (int i = 0; i < colors.length; i ++) {
+			this.colors[i] = colors[i];
 		}
 	}
 	
@@ -96,8 +103,8 @@ public class Circleizer {
 		largestBubbleRelativeDimension /= bubbleSizeExponentiation;
 		
 		
-//		for (int size = largestBubbleRelativeDimension; size >= 1; size /= bubbleSizeExponentiation) { //Circle sizes are exponentiated from the smallest circle
-		for (int size = largestBubbleRelativeDimension; size >= 1; size --) { //Circle sizes are in between the size of the smallest and biggest circle
+		for (int size = largestBubbleRelativeDimension; size >= 1; size /= bubbleSizeExponentiation) { //Circle sizes are exponentiated from the smallest circle //faster than the other one
+//		for (int size = largestBubbleRelativeDimension; size >= 1; size --) { //Circle sizes are in between the size of the smallest and biggest circle
 //			int sizeSquared = size * size;
 			float radiusSquared = (size / 2.0f) * (size / 2.0f);
 			
