@@ -12,4 +12,5 @@ You know what? Disregard that struck-out statement. We now have the technology n
 Examples:
 
 Chameleon (color picker example) [(original)](http://i.imgur.com/Ccpsc12.jpg) [(circleized)](http://i.imgur.com/lJi4zjV.png)
+
 Adele running over Bikini Bottom [(original)](http://i.imgur.com/9pBk9ht.jpg) [(circleized)](http://i.imgur.com/rVhSHk5.png)
